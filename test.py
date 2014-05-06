@@ -135,5 +135,15 @@ class TestFeatureOverlap(ut.TestCase):
 		node.add_point((0.75,0.75))
 		self.assertEqual(node.count_overlapping_points(self.square), 1)
 
+	def test_count(self):
+		xs = range(100)
+		ys = range(100)
+		node = module.Node(None, (0,0,1,1), max_points=1)
+		for x in xs:
+			for y in ys:
+				node.add_point((x/100.0,y/100.0))
+		feature = module.Node(None, (0.5, 0.5, 1.5, 1.5))
+		self.assertEqual(node.count_overlapping_points(feature), 2500)
+
 if __name__ == '__main__':
 	ut.main()
