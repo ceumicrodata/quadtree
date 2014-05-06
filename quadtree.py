@@ -9,61 +9,86 @@ class Node(object):
     ROOT = 0
     BRANCH = 1
     LEAF = 2
-    minsize = 1   # Set by QuadTree
     #_______________________________________________________
     # In the case of a root node "parent" will be None. The
     # "rect" lists the minx,minz,maxx,maxz of the rectangle
     # represented by the node.
-    def __init__(self, parent, rect):
+    def __init__(self, parent, rect, max_points=2):
         self.parent = parent
-        self.children = [None,None,None,None]
-        if parent == None:
-            self.depth = 0
+        self.children = []
+        self.points = []
+        self.number_of_points = 0
+        self.max_points = max_points
+
+        self.rectangle = tuple([float(item) for item in rect])
+        self.type = Node.LEAF
+
+    def add_point(self, point):
+        if self.contains_point(point):
+            if self.type==Node.LEAF:
+                if len(self.points)+1 > self.max_points:
+                    # the box is crowded, break it up in 4
+                    self.subdivide()
+                    # then try again
+                    self.add_point(point)
+                else:
+                    self.points.append(point)
+                    self.number_of_points += 1
+            else:
+                # find where the point goes
+                for child in self.children:
+                    if child.contains_point(point):
+                        child.add_point(point)
+                        self.number_of_points += 1
+                        break 
         else:
-            self.depth = parent.depth + 1
-        self.rect = rect
-        x0,z0,x1,z1 = rect
-        if self.parent == None:
-            self.type = Node.ROOT
-        elif (x1 - x0) <= Node.minsize:
-            self.type = Node.LEAF
-        else:
-            self.type = Node.BRANCH
+            # point not in box, cannot place
+            raise Exception
+
+    def count_overlapping_points(self):
+        return self.number_of_points
+
     #_______________________________________________________
     # Recursively subdivides a rectangle. Division occurs 
     # ONLY if the rectangle spans a "feature of interest".
     def subdivide(self):
-        if self.type == Node.LEAF:
-            return
-        x0,z0,x1,z1 = self.rect
-        h = (x1 - x0)/2
+        if not self.type == Node.LEAF:
+            # only leafs can be subdivided
+            raise Exception
+        points = self.points
+        self.points = []
+        self.type = Node.BRANCH
+    
+        x0,z0,x1,z1 = self.rectangle
+        half_width = (x1 - x0)/2
+        half_height = (z1 - z0)/2
         rects = []
-        rects.append( (x0, z0, x0 + h, z0 + h) )
-        rects.append( (x0, z0 + h, x0 + h, z1) )
-        rects.append( (x0 + h, z0 + h, x1, z1) )
-        rects.append( (x0 + h, z0, x1, z0 + h) )
-        for n in range(len(rects)):
-            span = self.spans_feature(rects[n])
-            if span == True:
-                self.children[n] = self.getinstance(rects[n])
-                self.children[n].subdivide() # << recursion
+        rects.append( (x0, z0, x0 + half_width, z0 + half_height) )
+        rects.append( (x0, z0 + half_height, x0 + half_width, z1) )
+        rects.append( (x0 + half_width, z0 + half_height, x1, z1) )
+        rects.append( (x0 + half_width, z0, x1, z0 + half_height) )
+        for rect in rects:
+            self.children.append(Node(self, rect, self.max_points))
+        for point in points:
+            for child in self.children:
+                if child.contains_point(point):
+                    child.add_point(point)
+                    break
+
+
     #_______________________________________________________
     # A utility proc that returns True if the coordinates of
     # a point are within the bounding box of the node.
-    def contains(self, x, z):
-        x0,z0,x1,z1 = self.rect
+    def contains_point(self, point):
+        x, z = point
+        x0,z0,x1,z1 = self.rectangle
         if x >= x0 and x <= x1 and z >= z0 and z <= z1:
             return True
-        return False
-    #_______________________________________________________
-    # Sub-classes must override these two methods.
-    def getinstance(self,rect):
-        return Node(self,rect)            
-    def spans_feature(self, rect):
-        return False
+        else:
+            return False
   
 #===========================================================            
-class QuadTree():
+class QuadTree(object):
     maxdepth = 1 # the "depth" of the tree
     leaves = []
     allnodes = []
