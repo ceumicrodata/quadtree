@@ -4,6 +4,31 @@
 # Malcolm Kesson Dec 19 2012
 
 # edited Miklos Koren May 2, 2014
+from shapely.geometry import Polygon as shapelyPolygon
+from shapely.geometry import Point as shapelyPoint
+
+def point_in_rectangle(point, rectangle):
+    x, z = point
+    x0,z0,x1,z1 = rectangle
+    return x >= x0 and x <= x1 and z >= z0 and z <= z1
+
+class Polygon(shapelyPolygon):
+    def contains_point(self, point):
+        shPoint = shapelyPoint(point)
+        return point_in_rectangle(point, self.bounds) and self.contains(shPoint)
+
+    def contains_rectangle(self, rectangle):
+        x0,z0,x1,z1 = rectangle
+        points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
+        shPolygon = shapelyPolygon(points)
+        return all([point_in_rectangle(point, self.bounds) for point in points]) and self.contains(shPolygon)
+
+    def intersects_rectangle(self, rectangle):
+        x0,z0,x1,z1 = rectangle
+        points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
+        shPolygon = shapelyPolygon(points)
+        return any([point_in_rectangle(point, self.bounds) for point in points]) and self.intersects(shPolygon)
+
 
 class Node(object):
     ROOT = 0

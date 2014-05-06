@@ -18,6 +18,29 @@ class Feature(module.Node):
                     self.contains_point((x1,z0)),
                     self.contains_point((x1,z1))])
 
+class TestSquare(ut.TestCase):
+	def setUp(self):
+		self.square = module.Polygon([(0,0), (1,0), (1,1), (0,1)])
+
+	def test_centroid_is_inside(self):
+		self.failUnless(self.square.contains_point((0.5,0.5)))
+
+	def test_side_is_inside(self):
+		self.failUnless(self.square.contains_point((0.001,0.5)))
+
+	def test_corner_is_inside(self):
+		self.failUnless(self.square.contains_point((0.001,0.001)))
+
+	def test_little_square_inside(self):
+		self.failUnless(self.square.contains_rectangle((0.25, 0.25, 0.75, 0.75)))
+
+	def test_offset_square_not_inside(self):
+		self.failIf(self.square.contains_rectangle((0.5, 0.5, 1.5, 1.5)))
+
+	def test_offset_square_intersects(self):
+		self.failUnless(self.square.intersects_rectangle((0.5, 0.5, 1.5, 1.5)))
+
+
 class TestNode(ut.TestCase):
 	def test_empty_node(self):
 		node = module.Node(None, (0,0,1,1))
