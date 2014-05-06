@@ -45,8 +45,34 @@ class Node(object):
             # point not in box, cannot place
             raise Exception
 
-    def count_overlapping_points(self):
-        return self.number_of_points
+    def contains_rectangle(self, rectangle):
+        # untested, just for convenience: we can use nodes as geometric features
+        x0,z0,x1,z1 = rectangle
+        return all([self.contains_point((x0,z0)),
+                    self.contains_point((x0,z1)),
+                    self.contains_point((x1,z0)),
+                    self.contains_point((x1,z1))])
+
+    def intersects_rectangle(self, rectangle):
+        # untested, just for convenience: we can use nodes as geometric features
+        x0,z0,x1,z1 = rectangle
+        return any([self.contains_point((x0,z0)),
+                    self.contains_point((x0,z1)),
+                    self.contains_point((x1,z0)),
+                    self.contains_point((x1,z1))])
+
+    def count_overlapping_points(self, feature):
+        if feature.contains_rectangle(self.rectangle):
+            # all points are within
+            return self.number_of_points
+        elif feature.intersects_rectangle(self.rectangle):
+            if self.type==Node.LEAF:
+                # we cannot continue recursion, do a "manual" count
+                return sum([1 for point in self.points if feature.contains_point(point)])
+            else:
+                return sum([child.count_overlapping_points(feature) for child in self.children])
+        else:
+            return 0
 
     #_______________________________________________________
     # Recursively subdivides a rectangle. Division occurs 

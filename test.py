@@ -100,5 +100,40 @@ class TestAutoSplitting(ut.TestCase):
 	def test_many_points_at_same_location(self):
 		pass
 
+class TestFeatureOverlap(ut.TestCase):
+	def setUp(self):
+		self.square = module.Node(None, (0.5, 0.5, 1.5, 1.5))
+		self.node = module.Node(None, (0,0,1,1), max_points=3)
+
+	def test_zero_point(self):
+		self.assertEqual(self.node.count_overlapping_points(self.square), 0)
+
+	def test_zero_overlap(self):
+		self.node.add_point((0.25, 0.25))
+		self.assertEqual(self.node.count_overlapping_points(self.square), 0)
+
+	def test_one_of_two_overlap(self):
+		self.node.add_point((0.25, 0.25))
+		self.node.add_point((0.75, 0.75))
+		self.assertEqual(self.node.count_overlapping_points(self.square), 1)
+
+	def test_child_overlaps(self):
+		node = self.node
+		node.add_point((0.25,0.25))
+		node.add_point((0.75,0.25))
+		node.add_point((0.25,0.75))
+		node.add_point((0.75,0.75))
+		self.assertEqual(node.count_overlapping_points(self.square), 1)
+
+	def test_multiple_children_partially_overlap(self):
+		node = self.node
+		other_square = module.Node(None, (0.49, 0.49, 1.49, 1.49))
+
+		node.add_point((0.25,0.25))
+		node.add_point((0.75,0.25))
+		node.add_point((0.25,0.75))
+		node.add_point((0.75,0.75))
+		self.assertEqual(node.count_overlapping_points(self.square), 1)
+
 if __name__ == '__main__':
 	ut.main()
