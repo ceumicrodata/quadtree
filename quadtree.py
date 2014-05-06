@@ -45,22 +45,6 @@ class Node(object):
             # point not in box, cannot place
             raise Exception
 
-    def contains_rectangle(self, rectangle):
-        # untested, just for convenience: we can use nodes as geometric features
-        x0,z0,x1,z1 = rectangle
-        return all([self.contains_point((x0,z0)),
-                    self.contains_point((x0,z1)),
-                    self.contains_point((x1,z0)),
-                    self.contains_point((x1,z1))])
-
-    def intersects_rectangle(self, rectangle):
-        # untested, just for convenience: we can use nodes as geometric features
-        x0,z0,x1,z1 = rectangle
-        return any([self.contains_point((x0,z0)),
-                    self.contains_point((x0,z1)),
-                    self.contains_point((x1,z0)),
-                    self.contains_point((x1,z1))])
-
     def count_overlapping_points(self, feature):
         if feature.contains_rectangle(self.rectangle):
             # all points are within

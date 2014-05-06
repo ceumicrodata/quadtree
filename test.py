@@ -1,6 +1,23 @@
 import quadtree as module
 import unittest as ut
 
+class Feature(module.Node):
+    def contains_rectangle(self, rectangle):
+        # untested, just for convenience: we can use nodes as geometric features
+        x0,z0,x1,z1 = rectangle
+        return all([self.contains_point((x0,z0)),
+                    self.contains_point((x0,z1)),
+                    self.contains_point((x1,z0)),
+                    self.contains_point((x1,z1))])
+
+    def intersects_rectangle(self, rectangle):
+        # untested, just for convenience: we can use nodes as geometric features
+        x0,z0,x1,z1 = rectangle
+        return any([self.contains_point((x0,z0)),
+                    self.contains_point((x0,z1)),
+                    self.contains_point((x1,z0)),
+                    self.contains_point((x1,z1))])
+
 class TestNode(ut.TestCase):
 	def test_empty_node(self):
 		node = module.Node(None, (0,0,1,1))
@@ -102,7 +119,7 @@ class TestAutoSplitting(ut.TestCase):
 
 class TestFeatureOverlap(ut.TestCase):
 	def setUp(self):
-		self.square = module.Node(None, (0.5, 0.5, 1.5, 1.5))
+		self.square = Feature(None, (0.5, 0.5, 1.5, 1.5))
 		self.node = module.Node(None, (0,0,1,1), max_points=3)
 
 	def test_zero_point(self):
@@ -127,7 +144,7 @@ class TestFeatureOverlap(ut.TestCase):
 
 	def test_multiple_children_partially_overlap(self):
 		node = self.node
-		other_square = module.Node(None, (0.49, 0.49, 1.49, 1.49))
+		other_square = Feature(None, (0.49, 0.49, 1.49, 1.49))
 
 		node.add_point((0.25,0.25))
 		node.add_point((0.75,0.25))
@@ -142,7 +159,7 @@ class TestFeatureOverlap(ut.TestCase):
 		for x in xs:
 			for y in ys:
 				node.add_point((x/100.0,y/100.0))
-		feature = module.Node(None, (0.5, 0.5, 1.5, 1.5))
+		feature = Feature(None, (0.5, 0.5, 1.5, 1.5))
 		self.assertEqual(node.count_overlapping_points(feature), 2500)
 
 if __name__ == '__main__':
