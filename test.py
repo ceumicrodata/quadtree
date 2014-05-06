@@ -22,6 +22,11 @@ class TestAddingPoint(ut.TestCase):
 	def test_point_is_returned(self):
 		self.assertEqual(self.node.points[0], (0.5,0.5))
 
+	def test_outside_point_raises_exception(self):
+		def callable():
+			self.node.add_point((1.1, 1.1))
+		self.assertRaises(Exception, callable)
+
 class TestContains(ut.TestCase):
 	def setUp(self):
 		self.node = module.Node(None, (0,0,1,1))
