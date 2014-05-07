@@ -47,24 +47,31 @@ class Node(object):
     def __init__(self, parent, rect, max_points=2):
         self.parent = parent
         self.children = []
-        self.points = []
+        self._points = {}
         self.number_of_points = 0
         self.max_points = max_points
 
         self.rectangle = tuple([float(item) for item in rect])
         self.type = Node.LEAF
 
+    @property
+    def points(self):
+        points = []
+        for coordinate, frequency in self._points.items():
+            points.extend([coordinate]*frequency)
+        return points
+
     def add_point(self, point):
         if self.contains_point(point):
             if self.type==Node.LEAF:
-                if len(self.points)+1 > self.max_points:
+                if point in self._points:
+                    self._points[point] += 1
+                else:
+                    self._points[point] = 1
+                self.number_of_points += 1
+                if len(self._points) > self.max_points:
                     # the box is crowded, break it up in 4
                     self.subdivide()
-                    # then try again
-                    self.add_point(point)
-                else:
-                    self.points.append(point)
-                    self.number_of_points += 1
             else:
                 # find where the point goes
                 for child in self.children:
@@ -83,7 +90,7 @@ class Node(object):
         elif feature.intersects_rectangle(self.rectangle):
             if self.type==Node.LEAF:
                 # we cannot continue recursion, do a "manual" count
-                return sum([1 for point in self.points if feature.contains_point(point)])
+                return sum([frequency for point, frequency in self._points.items() if feature.contains_point(point)])
             else:
                 return sum([child.count_overlapping_points(feature) for child in self.children])
         else:
@@ -97,7 +104,7 @@ class Node(object):
             # only leafs can be subdivided
             raise Exception
         points = self.points
-        self.points = []
+        self._points = {}
         self.type = Node.BRANCH
     
         x0,z0,x1,z1 = self.rectangle

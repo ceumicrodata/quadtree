@@ -166,7 +166,21 @@ class TestAutoSplitting(ut.TestCase):
 		self.failUnless(self.node.contains_point((0.75,0.75)))
 
 	def test_many_points_at_same_location(self):
-		pass
+		self.node.add_point((0.25,0.25))
+		self.assertEqual(self.node.number_of_points, 3)
+
+	def test_points_at_same_location_do_not_split(self):
+		node = module.Node(None, (0,0,1,1), max_points=1)
+		node.add_point((0.25,0.25))
+		node.add_point((0.25,0.25))
+		self.assertEqual(node.type, module.Node.LEAF)
+
+	def test_points_at_same_location_go_to_same_square(self):
+		node = module.Node(None, (0,0,1,1), max_points=1)
+		node.add_point((0.25,0.25))
+		node.add_point((0.25,0.25))
+		node.subdivide()
+		self.assertEqual(node.children[0].number_of_points, 2)
 
 class TestFeatureOverlap(ut.TestCase):
 	def setUp(self):
