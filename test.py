@@ -1,5 +1,8 @@
 import quadtree as module
 import unittest as ut
+from shapely.geometry import Polygon
+from shapely.geometry import asShape
+import json
 
 class Feature(module.Node):
     def contains_rectangle(self, rectangle):
@@ -18,9 +21,34 @@ class Feature(module.Node):
                     self.contains_point((x1,z0)),
                     self.contains_point((x1,z1))])
 
+class TestComplicatedFeature(ut.TestCase):
+	def setUp(self):
+		geojson = json.load(open("kings-county-1850.geojson"))
+		self.feature = module.Feature(geometry=asShape(geojson['features'][0]['geometry']))
+		self.inside_point = (1830000, 563000)
+		self.outside_point = (1837056, 564700)
+
+	def test_point_inside(self):
+		self.failUnless(self.feature.contains_point(self.inside_point))
+
+	def test_point_outside(self):
+		self.failIf(self.feature.contains_point(self.outside_point))
+
+	def test_rectangle_intersects(self):
+		rectangle = tuple(self.inside_point+self.outside_point)
+		self.failUnless(self.feature.intersects_rectangle(rectangle))
+
+	def test_does_not_contain_rectangle(self):
+		rectangle = tuple(self.inside_point+self.outside_point)
+		self.failIf(self.feature.contains_rectangle(rectangle))
+
+	def test_contains_rectangle(self):
+		rectangle = (self.inside_point[0], self.inside_point[1], self.inside_point[0]+10, self.inside_point[1]+10)
+		self.failUnless(self.feature.contains_rectangle(rectangle))
+
 class TestSquare(ut.TestCase):
 	def setUp(self):
-		self.square = module.Polygon([(0,0), (1,0), (1,1), (0,1)])
+		self.square = module.Feature(Polygon([(0,0), (1,0), (1,1), (0,1)]))
 
 	def test_centroid_is_inside(self):
 		self.failUnless(self.square.contains_point((0.5,0.5)))

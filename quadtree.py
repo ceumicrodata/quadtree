@@ -6,28 +6,34 @@
 # edited Miklos Koren May 2, 2014
 from shapely.geometry import Polygon as shapelyPolygon
 from shapely.geometry import Point as shapelyPoint
+from shapely.geometry.base import BaseGeometry
 
 def point_in_rectangle(point, rectangle):
     x, z = point
     x0,z0,x1,z1 = rectangle
     return x >= x0 and x <= x1 and z >= z0 and z <= z1
 
-class Polygon(shapelyPolygon):
+class Feature(object):
+    def __init__(self, geometry):
+        if not isinstance(geometry, BaseGeometry):
+            raise Exception
+        self.geometry = geometry
+
     def contains_point(self, point):
         shPoint = shapelyPoint(point)
-        return point_in_rectangle(point, self.bounds) and self.contains(shPoint)
+        return point_in_rectangle(point, self.geometry.bounds) and self.geometry.contains(shPoint)
 
     def contains_rectangle(self, rectangle):
         x0,z0,x1,z1 = rectangle
         points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
         shPolygon = shapelyPolygon(points)
-        return all([point_in_rectangle(point, self.bounds) for point in points]) and self.contains(shPolygon)
+        return all([point_in_rectangle(point, self.geometry.bounds) for point in points]) and self.geometry.contains(shPolygon)
 
     def intersects_rectangle(self, rectangle):
         x0,z0,x1,z1 = rectangle
         points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
         shPolygon = shapelyPolygon(points)
-        return any([point_in_rectangle(point, self.bounds) for point in points]) and self.intersects(shPolygon)
+        return any([point_in_rectangle(point, self.geometry.bounds) for point in points]) and self.geometry.intersects(shPolygon)
 
 
 class Node(object):
