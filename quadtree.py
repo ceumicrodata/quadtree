@@ -129,42 +129,14 @@ class Node(object):
             return False
   
 #===========================================================            
-class QuadTree(object):
-    maxdepth = 1 # the "depth" of the tree
-    leaves = []
-    allnodes = []
+class QuadTree(Node):
     #_______________________________________________________
-    def __init__(self, rootnode, minrect):
-        Node.minsize = minrect
-        rootnode.subdivide() # constructs the network of nodes
-        self.prune(rootnode)
-        self.traverse(rootnode)
-    #_______________________________________________________
-    # Sets children of 'node' to None if they do not have any
-    # LEAF nodes.        
-    def prune(self, node):
-        if node.type == Node.LEAF:
-            return 1
-        leafcount = 0
-        removals = []
-        for child in node.children:
-            if child != None:
-                leafcount += self.prune(child)
-                if leafcount == 0:
-                    removals.append(child)
-        for item in removals:
-            n = node.children.index(item)
-            node.children[n] = None        
-        return leafcount
-    #_______________________________________________________
-    # Appends all nodes to a "generic" list, but only LEAF 
-    # nodes are appended to the list of leaves.
-    def traverse(self, node):
-        QuadTree.allnodes.append(node)
-        if node.type == Node.LEAF:
-            QuadTree.leaves.append(node)
-            if node.depth > QuadTree.maxdepth:
-                QuadTree.maxdepth = node.depth
-        for child in node.children:
-            if child != None:
-                self.traverse(child) # << recursion
+    def __init__(self, points):
+        minx = min([point[0] for point in points])
+        minz = min([point[1] for point in points])
+        maxx = max([point[0] for point in points])
+        maxz = max([point[1] for point in points])
+        # if a split involves 16 checks of containment, the optimal number of points is 16/ln(4)
+        super(QuadTree, self).__init__(None, rect=(minx,minz,maxx,maxz), max_points=11)
+        for point in points:
+            self.add_point(point)

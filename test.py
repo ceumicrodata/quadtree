@@ -213,5 +213,29 @@ class TestFeatureOverlap(ut.TestCase):
 		feature = Feature(None, (0.5, 0.5, 1.5, 1.5))
 		self.assertEqual(node.count_overlapping_points(feature), 2500)
 
+class TestQuadTree(ut.TestCase):
+	def setUp(self):
+		self.points = [
+			(0,0),
+			(0.5,0.5),
+			(0.75,0.25),
+			(1,1)
+		]
+		self.quadtree = module.QuadTree(self.points)
+
+	def test_all_points_within_quadtree(self):
+		for point in self.points:
+			self.failUnless(self.quadtree.contains_point(point))
+
+	def test_rectangle_is_bounding_box(self):
+		self.assertEqual(self.quadtree.rectangle, (0,0,1,1))
+
+	def test_has_four_points(self):
+		self.assertEqual(self.quadtree.number_of_points, 4)
+
+	def test_known_values(self):
+		rectangle = Feature(None, (0.25,0,1.25,0.75))
+		self.assertEqual(self.quadtree.count_overlapping_points(rectangle), 2)
+
 if __name__ == '__main__':
 	ut.main()
