@@ -33,7 +33,7 @@ class Feature(object):
         x0,z0,x1,z1 = rectangle
         points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
         shPolygon = shapelyPolygon(points)
-        return any([point_in_rectangle(point, self.geometry.bounds) for point in points]) and self.geometry.intersects(shPolygon)
+        return not self.geometry.disjoint(shPolygon)
 
 
 class Node(object):

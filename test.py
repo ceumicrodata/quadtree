@@ -38,6 +38,15 @@ class TestComplicatedFeature(ut.TestCase):
 		rectangle = tuple(self.inside_point+self.outside_point)
 		self.failUnless(self.feature.intersects_rectangle(rectangle))
 
+	def test_larger_rectangle_intersects(self):
+		rectangle = self.feature.geometry.bounds
+		self.failUnless(self.feature.intersects_rectangle(
+			(rectangle[0]-10, 
+				rectangle[1]-10,
+				rectangle[2]+10,
+				rectangle[3]+10)
+			))
+
 	def test_does_not_contain_rectangle(self):
 		rectangle = tuple(self.inside_point+self.outside_point)
 		self.failIf(self.feature.contains_rectangle(rectangle))
