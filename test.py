@@ -251,5 +251,32 @@ class TestQuadTree(ut.TestCase):
 		rectangle = Feature(None, (0.25,0,1.25,0.75))
 		self.assertEqual(self.quadtree.count_overlapping_points(rectangle), 2)
 
+class TestWalk(ut.TestCase):
+	def test_returns_one_point(self):
+		points = [
+			(0,0),
+		]
+		quadtree = module.QuadTree(points)
+		self.assertSetEqual(set(quadtree.walk()), set(points))
+
+	def test_returns_four_points(self):
+		points = [
+			(0,0),
+			(0.5,0.5),
+			(0.75,0.25),
+			(1,1)
+		]
+		quadtree = module.QuadTree(points)
+		self.assertSetEqual(set(quadtree.walk()), set(points))
+
+	def test_returns_many_points(self):
+		points = []
+		for x in range(100):
+			for y in range(100):
+				points.append((float(x), float(y)))
+		quadtree = module.QuadTree(points)
+		self.assertSetEqual(set(quadtree.walk()), set(points))
+
+
 if __name__ == '__main__':
 	ut.main()

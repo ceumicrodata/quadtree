@@ -134,6 +134,17 @@ class Node(object):
             return True
         else:
             return False
+
+    def walk(self):
+        ''' An iterator over the points of in the Node'''
+        if self.type==Node.LEAF:
+            for point in self.points:
+                yield point
+        else:
+            for child in self.children:
+                for point in child.walk():
+                    yield point
+
   
 #===========================================================            
 class QuadTree(Node):
