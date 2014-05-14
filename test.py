@@ -21,12 +21,33 @@ class Feature(module.Node):
                     self.contains_point((x1,z0)),
                     self.contains_point((x1,z1))])
 
-class TestComplicatedFeature(ut.TestCase):
+class TestFeatureWrapper(ut.TestCase):
 	def setUp(self):
 		geojson = json.load(open("kings-county-1850.geojson"))
 		self.feature = module.Feature(geometry=asShape(geojson['features'][0]['geometry']))
 		self.inside_point = (1830000, 563000)
 		self.outside_point = (1837056, 564700)
+
+	def test_accepts_empty_geometry(self):
+		empty = module.Feature(geometry=Polygon())
+
+	def test_empty_geometry_does_not_contain_point(self):
+		empty = module.Feature(geometry=Polygon())
+		self.failIf(empty.contains_point((0,0)))
+
+	def test_feature_contains_pont_accepts_feature(self):
+		input_feature = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.5, 0.5]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		square = module.Feature(geometry=Polygon([(0,0), (1,0), (1,1), (0,1)]))
+		self.failUnless(square.contains_point(input_feature))
 
 	def test_point_inside(self):
 		self.failUnless(self.feature.contains_point(self.inside_point))
@@ -195,6 +216,10 @@ class TestFeatureOverlap(ut.TestCase):
 	def setUp(self):
 		self.square = Feature(None, (0.5, 0.5, 1.5, 1.5))
 		self.node = module.Node(None, (0,0,1,1), max_points=3)
+
+	def test_empty_geometry_returns_zero(self):
+		empty = module.Feature(geometry=Polygon())
+		self.assertEqual(self.node.count_overlapping_points(empty), 0)
 
 	def test_zero_point(self):
 		self.assertEqual(self.node.count_overlapping_points(self.square), 0)
@@ -397,20 +422,6 @@ class TestMetaData(ut.TestCase):
 		    "coordinates": [0.5, 0.5]
 		}
 		self.failUnless(self.node.contains_point(input_feature))
-
-	def test_feature_contains_pont_accepts_feature(self):
-		input_feature = {
-		  "type": "Feature",
-		  "geometry": {
-		    "type": "Point",
-		    "coordinates": [0.5, 0.5]
-		  },
-		  "properties": {
-		    "name": "Dinagat Islands"
-		  }
-		}
-		square = module.Feature(geometry=Polygon([(0,0), (1,0), (1,1), (0,1)]))
-		self.failUnless(square.contains_point(input_feature))
 
 	def test_features_can_initialize_quadtree(self):
 		feature1 = {

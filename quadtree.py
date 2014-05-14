@@ -64,17 +64,23 @@ class Feature(object):
         self.geometry = geometry
 
     def contains_point(self, point):
+        if self.geometry.is_empty:
+            return False
         pure_point = feature_to_point(featurize(point))
         shPoint = shapelyPoint(pure_point)
         return point_in_rectangle(pure_point, self.geometry.bounds) and self.geometry.contains(shPoint)
 
     def contains_rectangle(self, rectangle):
+        if self.geometry.is_empty:
+            return False
         x0,z0,x1,z1 = rectangle
         points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
         shPolygon = shapelyPolygon(points)
         return all([point_in_rectangle(point, self.geometry.bounds) for point in points]) and self.geometry.contains(shPolygon)
 
     def intersects_rectangle(self, rectangle):
+        if self.geometry.is_empty:
+            return False
         x0,z0,x1,z1 = rectangle
         points = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
         shPolygon = shapelyPolygon(points)
