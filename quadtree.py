@@ -222,10 +222,11 @@ class Node(object):
 class QuadTree(Node):
     #_______________________________________________________
     def __init__(self, points):
-        minx = min([point[0] for point in points])
-        minz = min([point[1] for point in points])
-        maxx = max([point[0] for point in points])
-        maxz = max([point[1] for point in points])
+        pure_points = [feature_to_point(featurize(point)) for point in points]
+        minx = min([point[0] for point in pure_points])
+        minz = min([point[1] for point in pure_points])
+        maxx = max([point[0] for point in pure_points])
+        maxz = max([point[1] for point in pure_points])
         # if a split involves 16 checks of containment, the optimal number of points is 16/ln(4)
         super(QuadTree, self).__init__(None, rect=(minx,minz,maxx,maxz), max_points=11)
         for point in points:

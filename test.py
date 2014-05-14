@@ -251,7 +251,7 @@ class TestQuadTree(ut.TestCase):
 			self.failUnless(self.quadtree.contains_point(point))
 
 	def test_rectangle_is_bounding_box(self):
-		self.assertEqual(self.quadtree.rectangle, (0,0,1,1))
+			self.assertEqual(self.quadtree.rectangle, (0,0,1,1))
 
 	def test_has_four_points(self):
 		self.assertEqual(self.quadtree.number_of_points, 4)
@@ -397,6 +397,30 @@ class TestMetaData(ut.TestCase):
 		    "coordinates": [0.5, 0.5]
 		}
 		self.failUnless(self.node.contains_point(input_feature))
+
+	def test_features_can_initialize_quadtree(self):
+		feature1 = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.25, 0.25]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		feature2 = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.75, 0.75]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		quadtree = module.QuadTree([feature1, feature2])
+		self.assertEqual(quadtree.rectangle, (0.25, 0.25, 0.75, 0.75))
 
 if __name__ == '__main__':
 	ut.main()
