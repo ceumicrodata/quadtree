@@ -8,6 +8,47 @@ from shapely.geometry import Polygon as shapelyPolygon
 from shapely.geometry import Point as shapelyPoint
 from shapely.geometry.base import BaseGeometry
 
+def featurize(point):
+    try:
+        if point['type']=='Feature' and 'geometry' in point and 'properties' in point:
+            return point
+        else:
+            raise Exception
+    except:
+        try:
+            if point['type']=='Point' and 'coordinates' in point:
+                return geometry_to_feature(point)
+            else:
+                raise Exception
+        except:
+            return point_to_feature(point)
+
+def geometry_to_point(geometry):
+    return tuple(geometry['coordinates'])
+
+def feature_to_point(feature):
+    return geometry_to_point(feature['geometry'])
+
+def point_to_feature(point):
+    return {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": list(point)
+      },
+      "properties": {
+        "name": "Dinagat Islands"
+      }
+    }
+
+def geometry_to_feature(geometry):
+    return {
+      "type": "Feature",
+      "geometry": geometry,
+      "properties": {
+      }
+    }
+
 def point_in_rectangle(point, rectangle):
     x, z = point
     x0,z0,x1,z1 = rectangle
@@ -48,6 +89,7 @@ class Node(object):
         self.parent = parent
         self.children = []
         self._points = {}
+        self.features = []
         self.number_of_points = 0
         self.max_points = max_points
 
@@ -62,12 +104,15 @@ class Node(object):
         return points
 
     def add_point(self, point):
-        if self.contains_point(point):
+        point_feature = featurize(point)
+        point = feature_to_point(point_feature)
+        if self.contains_point(point_feature):
             if self.type==Node.LEAF:
                 if point in self._points:
                     self._points[point] += 1
                 else:
                     self._points[point] = 1
+                self.features.append(point_feature)
                 self.number_of_points += 1
                 if len(self._points) > self.max_points:
                     # the box is crowded, break it up in 4
@@ -75,8 +120,8 @@ class Node(object):
             else:
                 # find where the point goes
                 for child in self.children:
-                    if child.contains_point(point):
-                        child.add_point(point)
+                    if child.contains_point(point_feature):
+                        child.add_point(point_feature)
                         self.number_of_points += 1
                         break 
         else:
@@ -96,6 +141,31 @@ class Node(object):
         else:
             return 0
 
+    def get_overlapping_points(self, feature):
+        if feature.contains_rectangle(self.rectangle):
+            # all points are within
+            return self.get_all_points()
+        elif feature.intersects_rectangle(self.rectangle):
+            if self.type==Node.LEAF:
+                # we cannot continue recursion, do a "manual" count
+                return [point for point in self.features if feature.contains_point(point)]
+            else:
+                output = []
+                for child in self.children:
+                    output.extend(child.get_overlapping_points(feature))
+                return output
+        else:
+            return []
+
+    def get_all_points(self):
+        if self.type == Node.LEAF:
+            return self.features
+        else:
+            output = []
+            for child in self.children:
+                output.extend(child.get_all_points())
+            return output
+
     #_______________________________________________________
     # Recursively subdivides a rectangle. Division occurs 
     # ONLY if the rectangle spans a "feature of interest".
@@ -103,8 +173,9 @@ class Node(object):
         if not self.type == Node.LEAF:
             # only leafs can be subdivided
             raise Exception
-        points = self.points
+        features = self.features
         self._points = {}
+        self.features = []
         self.type = Node.BRANCH
     
         x0,z0,x1,z1 = self.rectangle
@@ -117,7 +188,7 @@ class Node(object):
         rects.append( (x0 + half_width, z0, x1, z0 + half_height) )
         for rect in rects:
             self.children.append(Node(self, rect, self.max_points))
-        for point in points:
+        for point in features:
             for child in self.children:
                 if child.contains_point(point):
                     child.add_point(point)
@@ -128,6 +199,7 @@ class Node(object):
     # A utility proc that returns True if the coordinates of
     # a point are within the bounding box of the node.
     def contains_point(self, point):
+        point = feature_to_point(featurize(point))
         x, z = point
         x0,z0,x1,z1 = self.rectangle
         if x >= x0 and x <= x1 and z >= z0 and z <= z1:

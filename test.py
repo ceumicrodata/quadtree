@@ -286,6 +286,117 @@ class TestWalk(ut.TestCase):
 		quadtree = module.QuadTree(points)
 		self.assertSetEqual(set(quadtree.walk()), set(points))
 
+class TestMetaData(ut.TestCase):
+	def setUp(self):
+		self.node = module.Node(None, (0,0,1,1), max_points=3)
+
+	def test_add_point_accepts_geometry(self):
+		geometry = {"type": "Point", "coordinates": [0.5, 0.5]}
+		self.node.add_point(geometry)
+		self.assertListEqual(list(self.node.points[0]), [0.5, 0.5])
+
+	def test_add_point_accepts_feature(self):
+		feature = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.5, 0.5]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		self.node.add_point(feature)
+		self.assertListEqual(list(self.node.points[0]), [0.5, 0.5])
+
+	def test_get_all_points_returns_feature(self):
+		self.node.add_point((0.5, 0.5))
+		feature = self.node.get_all_points()[0]
+		self.assertEqual(feature['type'], 'Feature')
+		self.assertEqual(feature['geometry']['type'], 'Point')
+		self.assertListEqual(feature['geometry']['coordinates'], [0.5, 0.5])
+		self.failUnless('properties' in feature)
+
+	def test_get_all_points_returns_all(self):
+		self.node.add_point((0.5, 0.5))
+		self.node.add_point((0.75, 0.75))
+		self.assertEqual(self.node.number_of_points, len(self.node.get_all_points()))
+
+	def test_get_all_points_returns_children(self):
+		self.node.add_point((0.25, 0.25))
+		self.node.add_point((0.75, 0.75))
+		self.node.subdivide()
+		self.assertEqual(self.node.number_of_points, len(self.node.get_all_points()))
+
+	def test_children_hold_features(self):
+		self.node.add_point((0.25, 0.25))
+		self.node.add_point((0.75, 0.75))
+		self.node.subdivide()
+		features = []
+		for child in self.node.children:
+			features.extend(child.get_all_points())
+		self.assertEqual(len(features), 2)
+
+	def test_get_all_points_returns_data(self):
+		self.node.add_point((0.5, 0.5))
+		input_feature = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.5, 0.5]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		output_feature = self.node.get_all_points()[0]
+		self.assertDictEqual(input_feature, output_feature)
+
+	def test_get_overlapping_points_returns_data(self):
+		self.node.add_point((0.25, 0.25))
+		input_feature = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.75, 0.75]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		self.node.add_point(input_feature)
+		square = Feature(None, (0.5, 0.5, 1.5, 1.5))
+		self.assertDictEqual(input_feature, self.node.get_overlapping_points(square)[0])
+
+	def test_get_overlapping_points_same_as_count(self):
+		xs = range(100)
+		ys = range(100)
+		node = module.Node(None, (0,0,1,1), max_points=1)
+		for x in xs:
+			for y in ys:
+				node.add_point((x/100.0,y/100.0))
+		feature = Feature(None, (0.5, 0.5, 1.5, 1.5))
+		self.assertEqual(node.count_overlapping_points(feature), len(node.get_overlapping_points(feature)))
+
+	def test_contains_pont_accepts_feature(self):
+		input_feature = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.5, 0.5]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		self.failUnless(self.node.contains_point(input_feature))
+
+	def test_contains_pont_accepts_geometry(self):
+		input_feature = {
+		    "type": "Point",
+		    "coordinates": [0.5, 0.5]
+		}
+		self.failUnless(self.node.contains_point(input_feature))
 
 if __name__ == '__main__':
 	ut.main()
