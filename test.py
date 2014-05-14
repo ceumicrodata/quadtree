@@ -398,6 +398,20 @@ class TestMetaData(ut.TestCase):
 		}
 		self.failUnless(self.node.contains_point(input_feature))
 
+	def test_feature_contains_pont_accepts_feature(self):
+		input_feature = {
+		  "type": "Feature",
+		  "geometry": {
+		    "type": "Point",
+		    "coordinates": [0.5, 0.5]
+		  },
+		  "properties": {
+		    "name": "Dinagat Islands"
+		  }
+		}
+		square = module.Feature(geometry=Polygon([(0,0), (1,0), (1,1), (0,1)]))
+		self.failUnless(square.contains_point(input_feature))
+
 	def test_features_can_initialize_quadtree(self):
 		feature1 = {
 		  "type": "Feature",

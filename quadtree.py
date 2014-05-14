@@ -55,14 +55,18 @@ def point_in_rectangle(point, rectangle):
     return x >= x0 and x <= x1 and z >= z0 and z <= z1
 
 class Feature(object):
+    '''
+    A wrapper around shapely geometries.
+    '''
     def __init__(self, geometry):
         if not isinstance(geometry, BaseGeometry):
             raise Exception
         self.geometry = geometry
 
     def contains_point(self, point):
-        shPoint = shapelyPoint(point)
-        return point_in_rectangle(point, self.geometry.bounds) and self.geometry.contains(shPoint)
+        pure_point = feature_to_point(featurize(point))
+        shPoint = shapelyPoint(pure_point)
+        return point_in_rectangle(pure_point, self.geometry.bounds) and self.geometry.contains(shPoint)
 
     def contains_rectangle(self, rectangle):
         x0,z0,x1,z1 = rectangle
