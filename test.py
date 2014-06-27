@@ -23,10 +23,10 @@ class Feature(module.Node):
 
 class TestFeatureWrapper(ut.TestCase):
 	def setUp(self):
-		geojson = json.load(open("kings-county-1850.geojson"))
+		geojson = json.load(open("kings-county.geojson"))
 		self.feature = module.Feature(geometry=asShape(geojson['features'][0]['geometry']))
-		self.inside_point = (1830000, 563000)
-		self.outside_point = (1837056, 564700)
+		self.inside_point = (-73.9517, 40.6472)
+		self.outside_point = (-73.9156, 40.6129)
 
 	def test_accepts_empty_geometry(self):
 		empty = module.Feature(geometry=Polygon())
@@ -62,10 +62,10 @@ class TestFeatureWrapper(ut.TestCase):
 	def test_larger_rectangle_intersects(self):
 		rectangle = self.feature.geometry.bounds
 		self.failUnless(self.feature.intersects_rectangle(
-			(rectangle[0]-10, 
-				rectangle[1]-10,
-				rectangle[2]+10,
-				rectangle[3]+10)
+			(rectangle[0]-1, 
+				rectangle[1]-1,
+				rectangle[2]+1,
+				rectangle[3]+1)
 			))
 
 	def test_does_not_contain_rectangle(self):
@@ -73,7 +73,7 @@ class TestFeatureWrapper(ut.TestCase):
 		self.failIf(self.feature.contains_rectangle(rectangle))
 
 	def test_contains_rectangle(self):
-		rectangle = (self.inside_point[0], self.inside_point[1], self.inside_point[0]+10, self.inside_point[1]+10)
+		rectangle = (self.inside_point[0], self.inside_point[1], self.inside_point[0]+0.01, self.inside_point[1]+0.01)
 		self.failUnless(self.feature.contains_rectangle(rectangle))
 
 class TestSquare(ut.TestCase):
